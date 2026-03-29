@@ -1,0 +1,29 @@
+The application encountered three chained errors during startup. Here is a step-by-step breakdown of what they were and how they were fixed:
+
+### 1. PrismaClientConstructorValidationError
+**Why it occurred:** The application uses Prisma version `^7.5.0`. In Prisma 7, the default engine type has changed to the `"client"` engine, which is specifically designed for Edge/Serverless environments and Prisma Accelerate. This engine type strictly requires a database driver adapter (like `@prisma/adapter-pg`) to be passed into the `PrismaClient` constructor. Since `PrismaService` was just calling `super({})` without an adapter, the validation failed.
+**How it was fixed:** Instead of downgrading, we fully embraced the new Prisma 7 architecture by installing the native Node.js PostgreSQL driver (`pg`) and the Prisma driver adapter (`@prisma/adapter-pg`). We then updated `src/prisma/prisma.service.ts` to instantiate a `pg` `Pool` and pass the `PrismaPg` adapter to the `PrismaClient` constructor.
+
+### 2. TypeScript Error (TS2345: Argument of type 'Pool' is not assignable)
+**Why it occurred:** After adding the `pg` pool, TypeScript threw an error stating the pool types were incompatible. This happens because `@prisma/adapter-pg` expects a specific version of `@types/pg` (8.11.11), while the newest version installed in the project was `8.18.0`.
+**How it was fixed:** We used a standard TypeScript cast (`as any`) when passing the `pool` to `new PrismaPg(pool as any)` to bypass the strict type-checking mismatch while preserving the fully functional runtime behavior.
+
+### 3. UnknownDependenciesException (NestJS DI Error)
+**Why it occurred:** After fixing Prisma, NestJS threw: `Nest can't resolve dependencies of the UserService (?). Please make sure that the argument PrismaService at index [0] is available in the UserModule module.`
+This error was previously hidden by the Prisma constructor crash. `UserService` relies on `PrismaService`, but NestJS modules are strictly isolated. `UserModule` did not import `PrismaModule`, meaning it had no access to the exported `PrismaService`.
+**How it was fixed:** We added `PrismaModule` to the `imports` array inside `src/user/user.module.ts`.
+
+With these three fixes, the NestJS application successfully compiles, resolves all dependencies, and starts up without errors.
+
+### Explanation of the Error:
+The error `Database "shakib" does not exist on the database server` occurred because the `DATABASE_URL` wasn't being loaded into NestJS before the `PrismaService` was instantiated. 
+
+Here is what was happening:
+1. `process.env.DATABASE_URL` was `undefined` in the `PrismaService` constructor because `.env` files aren't loaded automatically by Node.js unless explicitly configured.
+2. Because the `connectionString` handed to the `Pool` from the `pg` driver was `undefined`, Postgres falls back to its default behavior. 
+3. The default behavior of Postgres when no database name is provided is to look for a database that has the **exact same name as the system user** running the application (which is `shakib` in your case).
+4. Since a database named `shakib` didn't actually exist in your Docker container, it threw the error.
+
+### How it was fixed:
+1. Added `ConfigModule.forRoot({ isGlobal: true })` to the `AppModule` imports. The `@nestjs/config` module correctly reads your `.env` file and makes variables available.
+2. Modified `PrismaService` to inject the `ConfigService` which safely retrieves the loaded `DATABASE_URL` so that `pg` can connect to the correct `nest` database specified in your URL.

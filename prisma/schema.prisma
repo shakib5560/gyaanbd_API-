@@ -1,0 +1,39 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum OtpPurpose {
+  VERIFICATION
+  RESET_PASSWORD
+}
+
+model EmailOtp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  purpose   OtpPurpose @default(VERIFICATION)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String  @unique
+  isVerified Boolean @default(false)
+  password String
+  username String? @unique
+  role Role? @default(STUDENT)
+}
