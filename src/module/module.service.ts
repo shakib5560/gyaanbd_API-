@@ -1,26 +1,53 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateModuleDto } from './dto/create-module.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
 
 @Injectable()
 export class ModuleService {
-  create(createModuleDto: CreateModuleDto) {
-    return 'This action adds a new module';
+  constructor(private prisma: PrismaService) {}
+
+  async create(createModuleDto: CreateModuleDto) {
+    return this.prisma.module.create({
+      data: createModuleDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all module`;
+  async findAll() {
+    return this.prisma.module.findMany({
+      include: {
+        lessons: true,
+        course: { select: { title: true } },
+      },
+      orderBy: { order: 'asc' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} module`;
+  async findOne(id: string) {
+    const module = await this.prisma.module.findUnique({
+      where: { id },
+      include: { lessons: true, course: true },
+    });
+    if (!module) throw new NotFoundException('Module not found');
+    return module;
   }
 
-  update(id: number, updateModuleDto: UpdateModuleDto) {
-    return `This action updates a #${id} module`;
+  async update(id: string, updateModuleDto: UpdateModuleDto) {
+    const module = await this.prisma.module.findUnique({ where: { id } });
+    if (!module) throw new NotFoundException('Module not found');
+
+    return this.prisma.module.update({
+      where: { id },
+      data: updateModuleDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} module`;
+  async remove(id: string) {
+    const module = await this.prisma.module.findUnique({ where: { id } });
+    if (!module) throw new NotFoundException('Module not found');
+
+    return this.prisma.module.delete({
+      where: { id },
+    });
   }
 }

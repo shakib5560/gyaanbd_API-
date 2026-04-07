@@ -1,20 +1,28 @@
-import { IsString, IsUUID, IsOptional, IsInt, Min, IsUrl } from 'class-validator';
+import { IsString, IsUUID, IsOptional, IsInt, Min, IsNotEmpty } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateLessonDto {
+    @ApiProperty({ example: 'Introduction to NestJS' })
     @IsString()
+    @IsNotEmpty()
     title: string;
 
+    @ApiPropertyOptional({ example: 'Content in markdown' })
     @IsOptional()
     @IsString()
-    content?: string; // markdown/html
+    content?: string;
 
+    @ApiPropertyOptional({ example: 'path-to-video' })
     @IsOptional()
-    @IsUrl()
+    @IsString()
     videoUrl?: string;
 
+    @ApiProperty({ example: 'uuid-of-module' })
     @IsUUID()
+    @IsNotEmpty()
     moduleId: string;
 
+    @ApiProperty({ example: 1 })
     @IsInt()
     @Min(0)
     order: number;

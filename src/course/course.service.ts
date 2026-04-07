@@ -56,7 +56,7 @@ export class CourseService {
     if (file) {
       // Delete old thumbnail if it exists
       if (course.thumbnail && course.thumbnail.startsWith('/public/uploads/thumbnails/')) {
-        const oldFilePath = join(__dirname, '..', '..', course.thumbnail);
+        const oldFilePath = join(process.cwd(), course.thumbnail);
         if (fs.existsSync(oldFilePath)) {
           fs.unlinkSync(oldFilePath);
         }
@@ -76,7 +76,7 @@ export class CourseService {
 
     // Delete thumbnail if it exists
     if (course.thumbnail && course.thumbnail.startsWith('/public/uploads/thumbnails/')) {
-      const filePath = join(__dirname, '..', '..', course.thumbnail);
+      const filePath = join(process.cwd(), course.thumbnail);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }

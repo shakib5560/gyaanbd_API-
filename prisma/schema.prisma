@@ -223,6 +223,7 @@ model MCQSubmission {
 model Category {
   id   String @id @default(uuid())
   name String @unique
+  thumbnail String? // added for upload
   courses Course[]
 }
 

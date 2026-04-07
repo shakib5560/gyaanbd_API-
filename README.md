@@ -18,12 +18,12 @@
 
 ## Overview
 
-GyaanBD API is a robust LMS backend built on **NestJS**, designed with clean architecture principles and developer experience in mind. It handles user authentication, course management, file uploads, and email workflows — giving you a solid foundation to build a full-featured e-learning platform.
+GyaanBD API is a robust LMS backend built on **NestJS**, designed with clean architecture principles and developer experience in mind. It handles user authentication, course content management (Courses, Modules, Lessons), file uploads, and email workflows — giving you a solid foundation to build a full-featured e-learning platform.
 
 ```
 🔐 JWT Auth + OTP Email Verification
-📚 Full Course & Category CRUD
-🖼️  Thumbnail Uploads via Multer
+📚 Full Content CRUD (Courses, Categories, Modules, Lessons)
+🖼️  Multimedia Uploads (Thumbnails & Lesson Media) via Multer
 📧 Transactional Email Templates
 📖 Swagger Docs at /docs
 ```
@@ -37,7 +37,7 @@ GyaanBD API is a robust LMS backend built on **NestJS**, designed with clean arc
 | **Framework** | [NestJS](https://nestjs.com/) |
 | **Language** | TypeScript |
 | **ORM** | [Prisma](https://www.prisma.io/) |
-| **Database** | [PostgreSQL](https://www.postgresql.org/) |
+| **Database** | [PostgresSQL](https://www.postgresql.org/) |
 | **File Uploads** | [Multer](https://github.com/expressjs/multer) + [@nestjs/serve-static](https://github.com/nestjs/serve-static) |
 | **Security** | [Helmet](https://helmetjs.github.io/) + [Compression](https://github.com/expressjs/compression) |
 | **Documentation** | Swagger UI (`/docs`) |
@@ -108,39 +108,44 @@ Once running, visit **`http://localhost:3000/docs`** for the interactive Swagger
 | `GET` | `/auth/me` | Get authenticated user profile | 🔒 Private |
 | `POST` | `/auth/logout` | Invalidate session | 🔒 Private |
 
-### Course Management
+### Course & Content Management
 
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| `POST` | `/courses` | Create a course (supports thumbnail) | 🛡️ Admin |
-| `GET` | `/courses` | List all courses | Public |
-| `GET` | `/courses/:id` | Get course by ID | Public |
-| `PATCH` | `/courses/:id` | Update course (supports thumbnail) | 🛡️ Admin |
-| `DELETE` | `/courses/:id` | Delete course + auto-remove thumbnail | 🛡️ Admin |
-
-### Category Management
-
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `POST` | `/categories` | Create a new category | 🛡️ Admin |
+| `POST` | `/categories` | Create a new category (supports thumbnail) | 🛡️ Admin |
 | `GET` | `/categories` | List all categories | Public |
+| `POST` | `/courses` | Create a course (supports thumbnail) | 🛡️ Admin/Teacher |
+| `GET` | `/courses` | List all courses | Public |
+| `GET` | `/courses/:id` | Get course by ID (includes modules/lessons) | Public |
+| `PATCH` | `/courses/:id` | Update course (supports thumbnail) | 🛡️ Admin/Teacher |
+| `DELETE` | `/courses/:id` | Delete course + auto-remove media | 🛡️ Admin/Teacher |
+| `POST` | `/modules` | Create a course module | 🛡️ Admin/Teacher |
+| `GET` | `/modules` | List all modules | Public |
+| `GET` | `/modules/:id` | Get module by ID | Public |
+| `PATCH` | `/modules/:id` | Update module | 🛡️ Admin/Teacher |
+| `DELETE` | `/modules/:id` | Delete module | 🛡️ Admin/Teacher |
+| `POST` | `/lessons` | Create a lesson (supports video/media upload) | 🛡️ Admin/Teacher |
+| `GET` | `/lessons` | List all lessons | Public |
+| `GET` | `/lessons/:id` | Get lesson by ID | Public |
+| `PATCH` | `/lessons/:id` | Update lesson (supports media update) | 🛡️ Admin/Teacher |
+| `DELETE` | `/lessons/:id` | Delete lesson + auto-remove media | 🛡️ Admin/Teacher |
 
 ---
 
 ## File Uploads
 
-Thumbnails are stored and served locally in the development environment.
+GyaanBD handles multimedia uploads locally in the development environment.
 
-```
-Storage path : public/uploads/thumbnails/
-Access URL   : http://localhost:3000/public/uploads/thumbnails/<filename>
-```
+| Type | Field Name | Storage Path | Access URL |
+|---|---|---|---|
+| **Thumbnails** | `thumbnail` | `public/uploads/thumbnails/` | `.../public/uploads/thumbnails/<name>` |
+| **Lesson Media** | `video` | `public/uploads/lessons/` | `.../public/uploads/lessons/<name>` |
 
 **Testing uploads via Postman or Swagger:**
 
 1. Set the request body type to `multipart/form-data`
-2. Add text fields: `title`, `level`, `teacherId`, etc.
-3. Add a file field named `thumbnail` and attach your image
+2. Add necessary text fields (e.g., `title`, `courseId`, `moduleId`)
+3. Add the file field (`thumbnail` or `video`) and attach your file
 
 > [!NOTE]
 > The local storage setup is intended for **development and testing only**. For production deployments, migrate to a cloud storage provider such as **AWS S3** or **Cloudinary** for persistence, redundancy, and scalability.
@@ -161,8 +166,10 @@ GyaanBD ships with professionally designed, responsive HTML email templates for:
 ```
 src/
 ├── auth/          # JWT strategy, guards, OTP flows
-├── courses/       # Course CRUD + thumbnail handling
-├── categories/    # Category management
+├── category/      # Category management
+├── course/        # Course CRUD + thumbnail handling
+├── module/        # Module management
+├── lesson/        # Lesson CRUD + media handling
 ├── mail/          # Nodemailer + HTML templates
 ├── prisma/        # Prisma service & schema
 └── main.ts        # App bootstrap, Helmet, Swagger
