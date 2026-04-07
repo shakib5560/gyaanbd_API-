@@ -50,8 +50,8 @@ async function bootstrap() {
     // Swagger / OpenAPI Setup
     // -------------------------------
     const swaggerConfig = new DocumentBuilder()
-        .setTitle('API')
-        .setDescription('API documentation')
+        .setTitle('GyaanBD API')
+        .setDescription('GyaanBD Learning Management System API documentation')
         .setVersion('1.0')
         .addBearerAuth() // JWT authentication in Swagger
         .build();
