@@ -16,7 +16,7 @@ export class AuthGuard implements CanActivate {
         private jwtService: JwtService,
         private reflector: Reflector,
         private prisma: PrismaService,
-    ) {}
+    ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const isPublic = this.reflector.getAllAndOverride<boolean>(
@@ -64,7 +64,7 @@ export class AuthGuard implements CanActivate {
         }
 
         const [type, token] =
-        request.headers.authorization?.split(' ') ?? [];
+            request.headers.authorization?.split(' ') ?? [];
 
         return type === 'Bearer' ? token : undefined;
     }

@@ -18,73 +18,104 @@ enum OtpPurpose {
   RESET_PASSWORD
 }
 
+enum TransactionType {
+  DEPOSIT
+  PURCHASE
+  WITHDRAW
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELED
+}
+
 model EmailOtp {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   email     String
   otp       String
   purpose   OtpPurpose @default(VERIFICATION)
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
 
   @@index([email])
 }
 
-
 model User {
-  id           String @id @default(uuid())
-  email        String  @unique
-  isVerified   Boolean @default(false)
-  password     String
-  username     String? @unique
-  role         Role?   @default(STUDENT)
+  id         String  @id @default(uuid())
+  email      String  @unique
+  isVerified Boolean @default(false)
+  password   String
+  username   String? @unique
+  role       Role?   @default(STUDENT)
 
   adminProfile   AdminProfile?
   studentProfile StudentProfile?
   teacherProfile TeacherProfile?
 
   refreshToken String?
+
+  // Wallet & Payments
+  wallet             Wallet?
+  payments           Payment[]
+  walletTransactions WalletTransaction[]
+
+  createdAt DateTime @default(now())
 }
 
 model AdminProfile {
-  id          String @id @default(uuid())
-  userId      String @unique
-  user        User   @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   permissions Json?
 }
 
 model StudentProfile {
-  id              String             @id @default(uuid())
-  userId          String             @unique
-  user            User               @relation(fields: [userId], references: [id])
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  enrolledCourses CourseEnrollment[]
+  enrolledCourses       CourseEnrollment[]
   assignmentSubmissions AssignmentSubmission[]
-  mcqSubmissions MCQSubmission[]
+  mcqSubmissions        MCQSubmission[]
+  lessonProgresses      LessonProgress[]
 }
 
 model TeacherProfile {
-  id      String   @id @default(uuid())
-  userId  String   @unique
-  user    User     @relation(fields: [userId], references: [id])
 
-  courses Course[]
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  courses     Course[]
   assignments Assignment[]
-  mcqs MCQ[]
+  mcqs        MCQ[]
 }
 
 model Course {
-  id          String           @id @default(uuid())
+  id          String         @id @default(uuid())
   title       String
   description String?
-  teacher     TeacherProfile   @relation(fields: [teacherId], references: [id])
+  teacher     TeacherProfile @relation(fields: [teacherId], references: [id])
   teacherId   String
+  level String
+  price Float @default(0.0) // add this
+  isFree Boolean @default(false)
+  isPublished Boolean @default(false)
 
   enrollments CourseEnrollment[]
   assignments Assignment[]
-  mcqs MCQ[]
+  mcqs        MCQ[]
+  modules     Module[]
+  payments    Payment[]
 
-  createdAt   DateTime         @default(now())
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+
+  createdAt DateTime @default(now())
 }
 
 model CourseEnrollment {
@@ -94,12 +125,53 @@ model CourseEnrollment {
   student   StudentProfile @relation(fields: [studentId], references: [id])
   studentId String
 
-  enrolledAt DateTime      @default(now())
+  enrolledAt DateTime @default(now())
+
+  @@unique([courseId, studentId])
+}
+
+model Module {
+  id       String @id @default(uuid())
+  title    String
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId String
+
+  lessons Lesson[]
+  order   Int
+
+  @@unique([courseId, order])
+}
+
+model Lesson {
+  id       String  @id @default(uuid())
+  title    String
+  content  String? // markdown/html
+  videoUrl String?
+  module   Module  @relation(fields: [moduleId], references: [id])
+  moduleId String
+
+  order            Int
+  lessonProgresses LessonProgress[]
+
+  @@unique([moduleId, order])
+}
+
+model LessonProgress {
+  id       String @id @default(uuid())
+  lesson   Lesson @relation(fields: [lessonId], references: [id])
+  lessonId String
+
+  student   StudentProfile @relation(fields: [studentId], references: [id])
+  studentId String
+
+  isCompleted Boolean @default(false)
+
+  @@unique([lessonId, studentId])
 }
 
 model Assignment {
-  id          String        @id @default(uuid())
-  course      Course        @relation(fields: [courseId], references: [id])
+  id          String         @id @default(uuid())
+  course      Course         @relation(fields: [courseId], references: [id])
   courseId    String
   teacher     TeacherProfile @relation(fields: [teacherId], references: [id])
   teacherId   String
@@ -108,7 +180,7 @@ model Assignment {
   dueDate     DateTime
 
   submissions AssignmentSubmission[]
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime               @default(now())
 }
 
 model AssignmentSubmission {
@@ -118,33 +190,113 @@ model AssignmentSubmission {
   student      StudentProfile @relation(fields: [studentId], references: [id])
   studentId    String
   submittedAt  DateTime       @default(now())
-  fileUrl      String?        // optional file link
+  fileUrl      String? // optional file link
   grade        Float?
 }
 
 model MCQ {
-  id          String        @id @default(uuid())
-  course      Course        @relation(fields: [courseId], references: [id])
-  courseId    String
-  teacher     TeacherProfile @relation(fields: [teacherId], references: [id])
-  teacherId   String
-  question    String
-  options     Json          // store options as array of strings
+  id            String         @id @default(uuid())
+  course        Course         @relation(fields: [courseId], references: [id])
+  courseId      String
+  teacher       TeacherProfile @relation(fields: [teacherId], references: [id])
+  teacherId     String
+  question      String
+  options       Json // store options as array of strings
   correctAnswer String
-  createdAt   DateTime      @default(now())
+  createdAt     DateTime       @default(now())
 
   submissions MCQSubmission[]
 }
 
 model MCQSubmission {
-  id        String         @id @default(uuid())
-  mcq       MCQ            @relation(fields: [mcqId], references: [id])
-  mcqId     String
-  student   StudentProfile @relation(fields: [studentId], references: [id])
-  studentId String
-  answer    String
-  isCorrect Boolean?
-  submittedAt DateTime      @default(now())
+  id          String         @id @default(uuid())
+  mcq         MCQ            @relation(fields: [mcqId], references: [id])
+  mcqId       String
+  student     StudentProfile @relation(fields: [studentId], references: [id])
+  studentId   String
+  answer      String
+  isCorrect   Boolean?
+  submittedAt DateTime       @default(now())
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String @unique
+  courses Course[]
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  ROCKET
+  WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Wallet {
+  id      String @id @default(uuid())
+  balance Float  @default(0.0)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id     String            @id @default(uuid())
+  amount Float
+  type   TransactionType
+  status TransactionStatus @default(PENDING)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Optional links for traceability
+  paymentId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Payment {
+  id String @id @default(uuid())
+
+  userId   String
+  courseId String
+
+  amount Float
+
+  method        PaymentMethod
+  transactionId String? @unique // bKash TRX ID or internal wallet internal-ref
+
+  status PaymentStatus @default(PENDING)
+
+  proofImage String? // optional screenshot
+
+  gatewayPayload Json? // for gatewat responses (SSLCommerz, etc)
+
+  createdAt  DateTime  @default(now())
+  verifiedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+
+  @@index([userId])
+  @@index([courseId])
+}
+
+model PaymentAccount {
+  id     String        @id @default(uuid())
+  method PaymentMethod
+  number String
+  name   String? // account holder name
 }
 
 model BlacklistedToken {
