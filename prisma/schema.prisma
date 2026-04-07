@@ -105,6 +105,7 @@ model Course {
   price Float @default(0.0) // add this
   isFree Boolean @default(false)
   isPublished Boolean @default(false)
+  thumbnail   String?
 
   enrollments CourseEnrollment[]
   assignments Assignment[]

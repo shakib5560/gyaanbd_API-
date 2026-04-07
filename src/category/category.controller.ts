@@ -29,11 +29,15 @@ export class CategoryController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
     return this.categoryService.update(+id, updateCategoryDto);
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
   remove(@Param('id') id: string) {
     return this.categoryService.remove(+id);
   }

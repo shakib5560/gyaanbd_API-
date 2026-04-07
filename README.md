@@ -2,24 +2,26 @@
 
 **GyaanBD API** is a robust, production-ready Learning Management System (LMS) Backend built with NestJS. It provides a solid foundation for managing users, courses, and educational content with a strong focus on security, user experience, and clean architecture.
 
-## ✨ Core LMS Features & Capabilities
+## 📁 Media & Uploads (Development Environment)
 
-- **🛡️ Secure Authentication**: Full JWT-based authentication flow (Login, Signup, JWT Validation).
-- **🔄 Session Management**: Dual Token System with Access tokens (short-lived) and Refresh tokens (long-lived) for seamless user experience.
-- **📧 Professional Email OTP**: Real-time email verification and password reset using responsive HTML templates.
-- **🔒 Security First**: Server-side token blacklisting and refresh token revocation to ensure sessions are properly terminated. Role-based access control readiness for Students, Instructors, and Admins.
-- **🗄️ Scalable Database Design**: Optimized PostgreSQL schema using Prisma ORM, starting with User and EmailOtp models and expandable for Courses, Enrollments, and Progress tracking.
-- **🧪 Validation & Protection**: Strict input validation using `class-validator`, password hashing with `bcrypt`, and secure headers with `helmet`.
+In the current development setup, the project handles file uploads (like Course Thumbnails) locally.
+
+- **Storage Location**: `public/uploads/thumbnails/`
+- **Access URL**: `http://localhost:3000/public/uploads/thumbnails/[filename]`
+- **Implementation**: Uses `Multer` for disk storage and `@nestjs/serve-static` to serve files.
+
+> [!NOTE]
+> This local storage system is designed for **Development and Testing**. When the project is moved to a **VPS** or Production environment in the future, it is recommended to transition to a cloud storage provider (like AWS S3 or Cloudinary) for better scalability and persistence.
 
 ## 🛠️ Tech Stack
 
-- **Framework**: [NestJS](https://nestjs.com/) - A progressive Node.js framework
-- **ORM**: [Prisma](https://www.prisma.io/) - Next-generation Node.js and TypeScript ORM
-- **Database**: [PostgreSQL](https://www.postgresql.org/) - Relational database
-- **Email**: [Nodemailer](https://nodemailer.com/) - Gmail SMTP configured for sending OTP and alerts
-- **Security**: [Passport.js](https://www.passportjs.org/), [JWT](https://jwt.io/), [Bcrypt](https://github.com/kelektiv/node.bcrypt.js)
-- **Package Manager**: [pnpm](https://pnpm.io/)
-- **Documentation**: Swagger UI built-in for API testing
+- **Framework**: [NestJS](https://nestjs.com/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
+- **File Uploads**: [Multer](https://github.com/expressjs/multer)
+- **Static Files**: [@nestjs/serve-static](https://github.com/nestjs/serve-static)
+- **Security**: [Helmet](https://helmetjs.github.io/), [Compression](https://github.com/expressjs/compression)
+- **Documentation**: Swagger UI built-in at `/docs`
 
 ## 🚀 Getting Started
 
@@ -37,11 +39,13 @@ DATABASE_URL="postgresql://user:pass@localhost:5433/nest?schema=public"
 JWT_SECRET="your_ultra_secret_key"
 MAIL_USER="your-email@gmail.com"
 MAIL_PASS="your-app-password"
+PORT=3000
 ```
 
 ### 3. Database Setup
 ```bash
-pnpm prisma migrate dev
+npx prisma generate
+npx prisma db push
 ```
 
 ### 4. Run Application
@@ -56,23 +60,40 @@ pnpm run start:prod
 
 ## 📡 API Endpoints
 
-### Authentication & Authorization
+### 🔐 Authentication & Profile
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| POST | `/auth/signup` | Register new user (Student/Instructor) | Public |
+| POST | `/auth/signup` | Register new user | Public |
 | POST | `/auth/verify-email` | Verify email with OTP | Public |
 | POST | `/auth/login` | Login and get tokens | Public |
 | POST | `/auth/refresh` | Get new access token | Public |
-| POST | `/auth/forgot-password` | Request password reset OTP | Public |
-| POST | `/auth/reset-password` | Reset password with OTP | Public |
-| GET | `/auth/me` | Get current user profile | Private |
-| POST | `/auth/logout` | Logout and revoke tokens | Private |
+| GET | `/auth/me` | Get profile | Private |
+| POST | `/auth/logout` | Logout | Private |
 
-*(Note: Course management, enrollment, and content-delivery endpoints will be added to the roadmap context).*
+### 📚 Course Management
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| POST | `/courses` | Create course (supports thumbnail upload) | Admin |
+| GET | `/courses` | List all courses | Public |
+| GET | `/courses/:id` | Get course details | Public |
+| PATCH | `/courses/:id` | Update course (supports thumbnail update) | Admin |
+| DELETE | `/courses/:id` | Remove course (auto-deletes thumbnail file) | Admin |
+
+### 📁 Category Management
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| POST | `/categories` | Create new category | Admin |
+| GET | `/categories` | List all categories | Public |
+
+## 🧪 Testing File Uploads (Postman/Swagger)
+To test thumbnail uploads:
+1.  Set Request type to `multipart/form-data`.
+2.  Add text fields for `title`, `level`, `teacherId`, etc.
+3.  Add a file field named `thumbnail` and choose your image.
 
 ## 📧 Email Templates
 The system includes professional HTML templates for:
-- Student/Instructor Account Verification
+- Account Verification
 - Password Reset Instructions
 
 ## 📄 License

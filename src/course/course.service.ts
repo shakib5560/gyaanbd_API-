@@ -1,26 +1,89 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import * as fs from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class CourseService {
-  create(createCourseDto: CreateCourseDto) {
-    return 'This action adds a new course';
+  constructor(private prisma: PrismaService) {}
+
+  async create(createCourseDto: CreateCourseDto, file?: Express.Multer.File) {
+    const data = { ...createCourseDto };
+    if (file) {
+      data.thumbnail = `/public/uploads/thumbnails/${file.filename}`;
+    }
+
+    return this.prisma.course.create({
+      data,
+    });
   }
 
-  findAll() {
-    return `This action returns all course`;
+  async findAll() {
+    return this.prisma.course.findMany({
+      include: {
+        teacher: {
+          include: {
+            user: { select: { username: true, email: true } },
+          },
+        },
+        category: true,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} course`;
+  async findOne(id: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+      include: {
+        teacher: true,
+        category: true,
+        modules: {
+          include: { lessons: true },
+        },
+      },
+    });
+    if (!course) throw new NotFoundException('Course not found');
+    return course;
   }
 
-  update(id: number, updateCourseDto: UpdateCourseDto) {
-    return `This action updates a #${id} course`;
+  async update(id: string, updateCourseDto: UpdateCourseDto, file?: Express.Multer.File) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course) throw new NotFoundException('Course not found');
+
+    const data = { ...updateCourseDto };
+    if (file) {
+      // Delete old thumbnail if it exists
+      if (course.thumbnail && course.thumbnail.startsWith('/public/uploads/thumbnails/')) {
+        const oldFilePath = join(__dirname, '..', '..', course.thumbnail);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+      data.thumbnail = `/public/uploads/thumbnails/${file.filename}`;
+    }
+
+    return this.prisma.course.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} course`;
+  async remove(id: string) {
+    const course = await this.prisma.course.findUnique({ where: { id } });
+    if (!course) throw new NotFoundException('Course not found');
+
+    // Delete thumbnail if it exists
+    if (course.thumbnail && course.thumbnail.startsWith('/public/uploads/thumbnails/')) {
+      const filePath = join(__dirname, '..', '..', course.thumbnail);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    return this.prisma.course.delete({
+      where: { id },
+    });
   }
 }
