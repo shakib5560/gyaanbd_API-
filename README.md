@@ -24,6 +24,7 @@ GyaanBD API is a robust LMS backend built on **NestJS**, designed with clean arc
 🔐 JWT Auth + OTP Email Verification
 📚 Full Content CRUD (Courses, Categories, Modules, Lessons)
 📝 Assessments (Assignments & MCQs)
+⭐ Course & Teacher Reviews (Paid students only)
 🖼️  Multimedia Uploads (Thumbnails & Lesson Media) via Multer
 📧 Transactional Email Templates
 📖 Swagger Docs at /docs
@@ -140,6 +141,10 @@ Once running, visit **`http://localhost:3000/docs`** for the interactive Swagger
 | `GET` | `/mcq/:id` | Get MCQ by ID | Public |
 | `PATCH` | `/mcq/:id` | Update MCQ | 🛡️ Admin/Teacher |
 | `DELETE` | `/mcq/:id` | Delete MCQ | 🛡️ Admin/Teacher |
+| `POST` | `/reviews/course` | Submit a course review | 🔒 Paid Student |
+| `POST` | `/reviews/teacher` | Submit a teacher review | 🔒 Paid Student |
+| `GET` | `/reviews/course/:id` | Get reviews + avg rating for course | Public |
+| `GET` | `/reviews/teacher/:id` | Get reviews + avg rating for teacher | Public |
 
 ---
 
@@ -185,6 +190,7 @@ src/
 ├── prisma/        # Prisma service & schema
 ├── assignment/    # Assignment CRUD
 ├── mcq/           # MCQ CRUD
+├── review/        # Course & Teacher reviews
 └── main.ts        # App bootstrap, Helmet, Swagger
 ```
 

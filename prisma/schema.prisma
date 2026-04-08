@@ -82,6 +82,8 @@ model StudentProfile {
   assignmentSubmissions AssignmentSubmission[]
   mcqSubmissions        MCQSubmission[]
   lessonProgresses      LessonProgress[]
+  courseReviews         CourseReview[]
+  teacherReviews        TeacherReview[]
 }
 
 model TeacherProfile {
@@ -93,6 +95,7 @@ model TeacherProfile {
   courses     Course[]
   assignments Assignment[]
   mcqs        MCQ[]
+  reviews     TeacherReview[]
 }
 
 model Course {
@@ -112,6 +115,7 @@ model Course {
   mcqs        MCQ[]
   modules     Module[]
   payments    Payment[]
+  reviews     CourseReview[]
 
   category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?
@@ -305,4 +309,32 @@ model BlacklistedToken {
   id        String   @id @default(uuid())
   token     String   @unique
   createdAt DateTime @default(now())
+}
+
+model CourseReview {
+  id        String   @id @default(uuid())
+  rating    Int      // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+
+  student   StudentProfile @relation(fields: [studentId], references: [id])
+  studentId String
+  course    Course         @relation(fields: [courseId], references: [id])
+  courseId  String
+
+  @@unique([studentId, courseId]) // Only one review per course per student
+}
+
+model TeacherReview {
+  id        String   @id @default(uuid())
+  rating    Int      // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+
+  student   StudentProfile @relation(fields: [studentId], references: [id])
+  studentId String
+  teacher   TeacherProfile @relation(fields: [teacherId], references: [id])
+  teacherId String
+
+  @@unique([studentId, teacherId]) // Only one review per teacher per student
 }

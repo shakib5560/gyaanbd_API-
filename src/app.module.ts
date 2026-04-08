@@ -15,6 +15,7 @@ import { ModuleModule } from './module/module.module';
 import { LessonModule } from './lesson/lesson.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { McqModule } from './mcq/mcq.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { McqModule } from './mcq/mcq.module';
     LessonModule,
     AssignmentModule,
     McqModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],
