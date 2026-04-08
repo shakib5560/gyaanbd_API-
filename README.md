@@ -58,8 +58,8 @@ GyaanBD API is a robust LMS backend built on **NestJS**, designed with clean arc
 ### 1 · Clone & Install
 
 ```bash
-git clone https://github.com/shakib5560/gyaanbd_API-.git
-cd gyaanbd_API-
+git clone https://github.com/shakib5560/gyaanbd_API.git
+cd gyaanbd_API
 pnpm install
 ```
 
