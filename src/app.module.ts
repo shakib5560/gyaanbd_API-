@@ -15,7 +15,6 @@ import { ModuleModule } from './module/module.module';
 import { LessonModule } from './lesson/lesson.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { McqModule } from './mcq/mcq.module';
-import { WalletModule } from './wallet/wallet.module';
 
 @Module({
   imports: [
@@ -35,7 +34,6 @@ import { WalletModule } from './wallet/wallet.module';
     LessonModule,
     AssignmentModule,
     McqModule,
-    WalletModule,
   ],
   controllers: [AppController],
   providers: [AppService],

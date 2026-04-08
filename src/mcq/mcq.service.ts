@@ -1,26 +1,50 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateMcqDto } from './dto/create-mcq.dto';
 import { UpdateMcqDto } from './dto/update-mcq.dto';
 
 @Injectable()
 export class McqService {
-  create(createMcqDto: CreateMcqDto) {
-    return 'This action adds a new mcq';
+  constructor(private prisma: PrismaService) {}
+
+  async create(createMcqDto: CreateMcqDto) {
+    return this.prisma.mCQ.create({
+      data: createMcqDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all mcq`;
+  async findAll() {
+    return this.prisma.mCQ.findMany({
+      include: {
+        course: { select: { title: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} mcq`;
+  async findOne(id: string) {
+    const mcq = await this.prisma.mCQ.findUnique({
+      where: { id },
+      include: { course: true, teacher: true },
+    });
+    if (!mcq) throw new NotFoundException(`MCQ with ID ${id} not found`);
+    return mcq;
   }
 
-  update(id: number, updateMcqDto: UpdateMcqDto) {
-    return `This action updates a #${id} mcq`;
+  async update(id: string, updateMcqDto: UpdateMcqDto) {
+    const mcq = await this.prisma.mCQ.findUnique({ where: { id } });
+    if (!mcq) throw new NotFoundException(`MCQ with ID ${id} not found`);
+
+    return this.prisma.mCQ.update({
+      where: { id },
+      data: updateMcqDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} mcq`;
+  async remove(id: string) {
+    const mcq = await this.prisma.mCQ.findUnique({ where: { id } });
+    if (!mcq) throw new NotFoundException(`MCQ with ID ${id} not found`);
+
+    return this.prisma.mCQ.delete({ where: { id } });
   }
 }

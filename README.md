@@ -23,6 +23,7 @@ GyaanBD API is a robust LMS backend built on **NestJS**, designed with clean arc
 ```
 🔐 JWT Auth + OTP Email Verification
 📚 Full Content CRUD (Courses, Categories, Modules, Lessons)
+📝 Assessments (Assignments & MCQs)
 🖼️  Multimedia Uploads (Thumbnails & Lesson Media) via Multer
 📧 Transactional Email Templates
 📖 Swagger Docs at /docs
@@ -129,6 +130,16 @@ Once running, visit **`http://localhost:3000/docs`** for the interactive Swagger
 | `GET` | `/lessons/:id` | Get lesson by ID | Public |
 | `PATCH` | `/lessons/:id` | Update lesson (supports media update) | 🛡️ Admin/Teacher |
 | `DELETE` | `/lessons/:id` | Delete lesson + auto-remove media | 🛡️ Admin/Teacher |
+| `POST` | `/assignments` | Create a course assignment | 🛡️ Admin/Teacher |
+| `GET` | `/assignments` | List all assignments | Public |
+| `GET` | `/assignments/:id` | Get assignment by ID | Public |
+| `PATCH` | `/assignments/:id` | Update assignment | 🛡️ Admin/Teacher |
+| `DELETE` | `/assignments/:id` | Delete assignment | 🛡️ Admin/Teacher |
+| `POST` | `/mcq` | Create a multiple choice question | 🛡️ Admin/Teacher |
+| `GET` | `/mcq` | List all MCQs | Public |
+| `GET` | `/mcq/:id` | Get MCQ by ID | Public |
+| `PATCH` | `/mcq/:id` | Update MCQ | 🛡️ Admin/Teacher |
+| `DELETE` | `/mcq/:id` | Delete MCQ | 🛡️ Admin/Teacher |
 
 ---
 
@@ -172,6 +183,8 @@ src/
 ├── lesson/        # Lesson CRUD + media handling
 ├── mail/          # Nodemailer + HTML templates
 ├── prisma/        # Prisma service & schema
+├── assignment/    # Assignment CRUD
+├── mcq/           # MCQ CRUD
 └── main.ts        # App bootstrap, Helmet, Swagger
 ```
 
