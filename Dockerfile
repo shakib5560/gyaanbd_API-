@@ -41,4 +41,4 @@ RUN pnpm install --prod
 EXPOSE 3001
 
 # Run the app
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
