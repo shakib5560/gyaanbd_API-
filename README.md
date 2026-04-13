@@ -10,7 +10,12 @@
 
 **A production-ready Learning Management System backend — built for scale, secured by design.**
 
-[Getting Started](#-getting-started) · [API Reference](#-api-reference) · [Tech Stack](#-tech-stack) · [Contributing](#-contributing)
+[Getting Started](#-getting-started) · [API Reference](#-api-reference) · [Tech Stack](#-tech-stack) · [Deployment](#-deployment)
+<br/>
+
+[![Live API](https://img.shields.io/badge/Live_API-gyaanbd--api.onrender.com-6366f1?style=for-the-badge&logo=render&logoColor=white)](https://gyaanbd-api.onrender.com)
+[![API Documentation](https://img.shields.io/badge/Documentation-Swagger_UI-06b6d4?style=for-the-badge&logo=swagger&logoColor=white)](https://gyaanbd-api.onrender.com/docs)
+[![Build Status](https://img.shields.io/badge/Build-Passing-22c55e?style=for-the-badge)](https://gyaanbd-api.onrender.com/docs)
 
 </div>
 
