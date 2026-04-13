@@ -97,6 +97,42 @@ Once running, visit **`http://localhost:3000/docs`** for the interactive Swagger
 
 ---
 
+## Deployment
+
+### Docker (Recommended)
+
+This project includes a multi-stage Docker build for optimized production images.
+
+1. **Build the image**:
+   ```bash
+   docker build -t gyaanbd-api .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -p 3001:3001 \
+     --env-file .env \
+     -e NODE_ENV=production \
+     gyaanbd-api
+   ```
+
+### Production Configuration
+
+Ensure the following environment variables are set in your production environment:
+
+| Variable | Description |
+|---|---|
+| `NODE_ENV` | Set to `production` to disable Swagger and enable production optimizations. |
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins (e.g., `https://your-app.com`). |
+| `DATABASE_URL` | Your production PostgreSQL connection string. |
+| `JWT_SECRET` | A strong, random string for JWT signing. |
+| `PORT` | The port your application will listen on (default: `3001`). |
+
+> [!IMPORTANT]
+> Swagger documentation is automatically disabled when `NODE_ENV=production` for security.
+
+---
+
 ## API Reference
 
 ### Authentication & Profile

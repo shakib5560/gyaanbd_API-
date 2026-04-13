@@ -1,25 +1,45 @@
-FROM node:20-alpine
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# enable pnpm
+# Enable pnpm
 RUN corepack enable
 
-# copy lock + package
+# Copy lock + package
 COPY package.json pnpm-lock.yaml ./
 
-# install dependencies
+# Install dependencies (including devDependencies for build)
 RUN pnpm install
 
-# copy project
+# Copy project including prisma schema
 COPY . .
 
-# generate prisma client
+# Generate prisma client
 RUN pnpm prisma generate
 
-# build nest app
+# Build nest app
 RUN pnpm build
 
+# Stage 2: Production
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Enable pnpm
+RUN corepack enable
+
+# Copy only what's needed for production
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/public ./public
+
+# Install only production dependencies
+RUN pnpm install --prod
+
+# Expose port (can be overridden by env)
 EXPOSE 3001
 
+# Run the app
 CMD ["node", "dist/main.js"]
