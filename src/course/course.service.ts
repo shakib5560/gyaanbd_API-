@@ -2,17 +2,18 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
-import * as fs from 'fs';
-import { join } from 'path';
+import { ImagekitService } from '../imagekit/imagekit.service';
 
 @Injectable()
 export class CourseService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private imagekitService: ImagekitService) {}
 
   async create(createCourseDto: CreateCourseDto, file?: Express.Multer.File) {
-    const data = { ...createCourseDto };
+    const data: any = { ...createCourseDto };
     if (file) {
-      data.thumbnail = `/public/uploads/thumbnails/${file.filename}`;
+      const uploadResult = await this.imagekitService.upload(file, 'gyaanbd/courses');
+      data.thumbnail = uploadResult.url;
+      data.thumbnailId = uploadResult.fileId;
     }
 
     return this.prisma.course.create({
@@ -52,16 +53,15 @@ export class CourseService {
     const course = await this.prisma.course.findUnique({ where: { id } });
     if (!course) throw new NotFoundException('Course not found');
 
-    const data = { ...updateCourseDto };
+    const data: any = { ...updateCourseDto };
     if (file) {
       // Delete old thumbnail if it exists
-      if (course.thumbnail && course.thumbnail.startsWith('/public/uploads/thumbnails/')) {
-        const oldFilePath = join(process.cwd(), course.thumbnail);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
+      if (course.thumbnailId) {
+        await this.imagekitService.delete(course.thumbnailId);
       }
-      data.thumbnail = `/public/uploads/thumbnails/${file.filename}`;
+      const uploadResult = await this.imagekitService.upload(file, 'gyaanbd/courses');
+      data.thumbnail = uploadResult.url;
+      data.thumbnailId = uploadResult.fileId;
     }
 
     return this.prisma.course.update({
@@ -75,11 +75,8 @@ export class CourseService {
     if (!course) throw new NotFoundException('Course not found');
 
     // Delete thumbnail if it exists
-    if (course.thumbnail && course.thumbnail.startsWith('/public/uploads/thumbnails/')) {
-      const filePath = join(process.cwd(), course.thumbnail);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    if (course.thumbnailId) {
+      await this.imagekitService.delete(course.thumbnailId);
     }
 
     return this.prisma.course.delete({

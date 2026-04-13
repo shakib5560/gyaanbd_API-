@@ -2,18 +2,19 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import * as fs from 'fs';
-import { join } from 'path';
+import { ImagekitService } from '../imagekit/imagekit.service';
 
 @Injectable()
 export class CategoryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private imagekitService: ImagekitService) {}
 
   async create(createCategoryDto: CreateCategoryDto, file?: Express.Multer.File) {
     try {
-      const data = { ...createCategoryDto };
+      const data: any = { ...createCategoryDto };
       if (file) {
-        data.thumbnail = `/public/uploads/thumbnails/${file.filename}`;
+        const uploadResult = await this.imagekitService.upload(file, 'gyaanbd/categories');
+        data.thumbnail = uploadResult.url;
+        data.thumbnailId = uploadResult.fileId;
       }
       return await this.prisma.category.create({
         data,
@@ -46,15 +47,14 @@ export class CategoryService {
     const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category) throw new NotFoundException('Category not found');
 
-    const data = { ...updateCategoryDto };
+    const data: any = { ...updateCategoryDto };
     if (file) {
-      if (category.thumbnail && category.thumbnail.startsWith('/public/uploads/thumbnails/')) {
-        const oldFilePath = join(process.cwd(), category.thumbnail);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
+      if (category.thumbnailId) {
+        await this.imagekitService.delete(category.thumbnailId);
       }
-      data.thumbnail = `/public/uploads/thumbnails/${file.filename}`;
+      const uploadResult = await this.imagekitService.upload(file, 'gyaanbd/categories');
+      data.thumbnail = uploadResult.url;
+      data.thumbnailId = uploadResult.fileId;
     }
 
     return this.prisma.category.update({
@@ -67,11 +67,8 @@ export class CategoryService {
     const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category) throw new NotFoundException('Category not found');
 
-    if (category.thumbnail && category.thumbnail.startsWith('/public/uploads/thumbnails/')) {
-      const filePath = join(process.cwd(), category.thumbnail);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    if (category.thumbnailId) {
+      await this.imagekitService.delete(category.thumbnailId);
     }
 
     return this.prisma.category.delete({

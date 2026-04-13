@@ -17,6 +17,7 @@ import { LessonModule } from './lesson/lesson.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { McqModule } from './mcq/mcq.module';
 import { ReviewModule } from './review/review.module';
+import { ImagekitModule } from './imagekit/imagekit.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ReviewModule } from './review/review.module';
     AuthModule,
     UserModule,
     PrismaModule,
+    ImagekitModule,
     MailModule,
     CourseModule,
     PaymentModule,

@@ -3,17 +3,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { Role, PaymentStatus } from '@prisma/client';
-import * as fs from 'fs';
-import { join } from 'path';
+import { ImagekitService } from '../imagekit/imagekit.service';
 
 @Injectable()
 export class LessonService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private imagekitService: ImagekitService) {}
 
   async create(createLessonDto: CreateLessonDto, file?: Express.Multer.File) {
-    const data = { ...createLessonDto };
+    const data: any = { ...createLessonDto };
     if (file) {
-      data.videoUrl = `/public/uploads/lessons/${file.filename}`;
+      const uploadResult = await this.imagekitService.upload(file, 'gyaanbd/lessons');
+      data.videoUrl = uploadResult.url;
+      data.videoId = uploadResult.fileId;
     }
     return this.prisma.lesson.create({
       data,
@@ -103,15 +104,14 @@ export class LessonService {
     const lesson = await this.prisma.lesson.findUnique({ where: { id } });
     if (!lesson) throw new NotFoundException('Lesson not found');
 
-    const data = { ...updateLessonDto };
+    const data: any = { ...updateLessonDto };
     if (file) {
-      if (lesson.videoUrl && lesson.videoUrl.startsWith('/public/uploads/lessons/')) {
-        const oldFilePath = join(process.cwd(), lesson.videoUrl);
-        if (fs.existsSync(oldFilePath)) {
-          fs.unlinkSync(oldFilePath);
-        }
+      if (lesson.videoId) {
+        await this.imagekitService.delete(lesson.videoId);
       }
-      data.videoUrl = `/public/uploads/lessons/${file.filename}`;
+      const uploadResult = await this.imagekitService.upload(file, 'gyaanbd/lessons');
+      data.videoUrl = uploadResult.url;
+      data.videoId = uploadResult.fileId;
     }
 
     return this.prisma.lesson.update({
@@ -124,11 +124,8 @@ export class LessonService {
     const lesson = await this.prisma.lesson.findUnique({ where: { id } });
     if (!lesson) throw new NotFoundException('Lesson not found');
 
-    if (lesson.videoUrl && lesson.videoUrl.startsWith('/public/uploads/lessons/')) {
-      const filePath = join(process.cwd(), lesson.videoUrl);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+    if (lesson.videoId) {
+      await this.imagekitService.delete(lesson.videoId);
     }
 
     return this.prisma.lesson.delete({

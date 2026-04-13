@@ -27,8 +27,6 @@ import { Role } from '../common/enum/auth.enum';
 
 // File upload (Multer)
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 
 // Swagger API documentation
 import { ApiConsumes, ApiTags } from '@nestjs/swagger';
@@ -47,19 +45,7 @@ export class CategoryController {
   @UseGuards(AuthGuard, RolesGuard) // Only authenticated users
   @Roles(Role.ADMIN) // Only ADMIN can create
   @ApiConsumes('multipart/form-data') // Accept file + body
-  @UseInterceptors(
-      FileInterceptor('thumbnail', { // Field name: thumbnail
-        storage: diskStorage({
-          destination: './public/uploads/thumbnails', // Save location
-          filename: (req, file, cb) => {
-            // Generate unique filename
-            const uniqueSuffix =
-                Date.now() + '-' + Math.round(Math.random() * 1e9);
-            cb(null, `category-${uniqueSuffix}${extname(file.originalname)}`);
-          },
-        }),
-      }),
-  )
+  @UseInterceptors(FileInterceptor('thumbnail'))
   create(
       @Body() createCategoryDto: CreateCategoryDto, // Request body
       @UploadedFile() file: Express.Multer.File // Uploaded file
@@ -93,18 +79,7 @@ export class CategoryController {
   @UseGuards(AuthGuard, RolesGuard) // Protected route
   @Roles(Role.ADMIN) // Only ADMIN
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-      FileInterceptor('thumbnail', {
-        storage: diskStorage({
-          destination: './public/uploads/thumbnails',
-          filename: (req, file, cb) => {
-            const uniqueSuffix =
-                Date.now() + '-' + Math.round(Math.random() * 1e9);
-            cb(null, `category-${uniqueSuffix}${extname(file.originalname)}`);
-          },
-        }),
-      }),
-  )
+  @UseInterceptors(FileInterceptor('thumbnail'))
   update(
       @Param('id') id: string, // Category ID
       @Body() updateCategoryDto: UpdateCategoryDto, // Updated data

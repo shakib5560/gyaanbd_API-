@@ -8,8 +8,6 @@ import { RolesGuard } from '../common/guard/roles.guard';
 import { Roles } from '../common/decorator/roles.decorator';
 import { Role } from '../common/enum/auth.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 
 @ApiTags('lessons')
 @Controller('lessons')
@@ -21,15 +19,7 @@ export class LessonController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('video', {
-    storage: diskStorage({
-      destination: './public/uploads/lessons',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `lesson-${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
-  }))
+  @UseInterceptors(FileInterceptor('video'))
   create(@Body() createLessonDto: CreateLessonDto, @UploadedFile() file: Express.Multer.File) {
     return this.lessonService.create(createLessonDto, file);
   }
@@ -54,15 +44,7 @@ export class LessonController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.TEACHER)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('video', {
-    storage: diskStorage({
-      destination: './public/uploads/lessons',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `lesson-${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
-  }))
+  @UseInterceptors(FileInterceptor('video'))
   update(
     @Param('id') id: string,
     @Body() updateLessonDto: UpdateLessonDto,

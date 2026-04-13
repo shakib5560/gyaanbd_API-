@@ -109,6 +109,7 @@ model Course {
   isFree Boolean @default(false)
   isPublished Boolean @default(false)
   thumbnail   String?
+  thumbnailId String?
 
   enrollments CourseEnrollment[]
   assignments Assignment[]
@@ -152,6 +153,7 @@ model Lesson {
   title    String
   content  String? // markdown/html
   videoUrl String?
+  videoId  String?
   module   Module  @relation(fields: [moduleId], references: [id])
   moduleId String
 
@@ -228,6 +230,7 @@ model Category {
   id   String @id @default(uuid())
   name String @unique
   thumbnail String? // added for upload
+  thumbnailId String?
   courses Course[]
 }
 

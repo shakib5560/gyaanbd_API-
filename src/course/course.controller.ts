@@ -3,8 +3,6 @@ import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @Controller('courses')
@@ -12,15 +10,7 @@ export class CourseController {
   constructor(private readonly courseService: CourseService) { }
 
   @Post()
-  @UseInterceptors(FileInterceptor('thumbnail', {
-    storage: diskStorage({
-      destination: './public/uploads/thumbnails',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
-  }))
+  @UseInterceptors(FileInterceptor('thumbnail'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -52,15 +42,7 @@ export class CourseController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('thumbnail', {
-    storage: diskStorage({
-      destination: './public/uploads/thumbnails',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
-  }))
+  @UseInterceptors(FileInterceptor('thumbnail'))
   @ApiConsumes('multipart/form-data')
   update(
     @Param('id') id: string,
