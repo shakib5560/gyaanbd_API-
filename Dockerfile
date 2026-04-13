@@ -33,7 +33,6 @@ RUN corepack enable
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/public ./public
 
 # Install only production dependencies
 RUN pnpm install --prod
