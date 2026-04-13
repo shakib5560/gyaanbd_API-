@@ -37,6 +37,9 @@ COPY --from=builder /app/prisma ./prisma
 # Install only production dependencies
 RUN pnpm install --prod
 
+# Generate prisma client for production
+RUN pnpm prisma generate
+
 # Expose port (can be overridden by env)
 EXPOSE 3001
 
